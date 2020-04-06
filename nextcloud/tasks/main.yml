@@ -1,12 +1,12 @@
 ---
-- name: Create Nextcloud db
+- name: Create db
   become: true
   become_user: postgres
   postgresql_db:
     name: nextcloud
     state: present
 
-- name: Create Nextcloud user
+- name: Create user
   become: yes
   become_user: postgres
   postgresql_user:
@@ -53,7 +53,7 @@
     group: www-data
     mode: 0770
 
-- name: Nextcloud installation via occ
+- name: Installation via occ
   become: true
   become_user: www-data
   shell:
@@ -73,7 +73,7 @@
 
 # "occ config:system:set" always returns 0 exit code.
 # This awful workaround has been invented for the sake to make the task idempotent
-- name: Configuring Nextcloud memory caching via occ
+- name: Configuring memory caching via occ
   become: true
   become_user: www-data
   shell:
@@ -87,16 +87,13 @@
   register: occ_config
   changed_when: "'_EXISTS' not in occ_config.stdout and occ_config.rc == 0"
 
-- debug:
-    msg: "{{ occ_config|to_nice_json }}"
-
-- name: Add Nginx config for Nextcloud
+- name: Add Nginx config
   template:
     src: templates/nextcloud.conf.j2
     dest: /etc/nginx/sites-available/nc.local.conf
   notify: restart nginx
 
-- name: Enable Nginx config for Nextcloud
+- name: Enable Nginx config
   file:
     src: /etc/nginx/sites-available/nc.local.conf
     dest: /etc/nginx/sites-enabled/nc.local.conf
@@ -108,3 +105,10 @@
     path: /etc/nginx/sites-enabled/default
     state: absent
   notify: restart nginx
+
+- name: Add cron job
+  cron:
+    name: Nextcloud housekeeping operations
+    minute: '5'
+    job: php -f /var/www/nextcloud/cron.php
+    user: www-data
