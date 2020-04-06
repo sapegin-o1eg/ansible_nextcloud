@@ -38,7 +38,15 @@
     nextcloud_admin_name: root
     nextcloud_admin_pass: fei8Ichieghie
 
-  pre_tasks:
+  roles:
+    - ufw
+    - nginx
+    - php-fpm
+    - redis
+    - postgresql
+    - nextcloud
+
+  post_tasks:
     - name: Apt update
       apt:
         update_cache: yes
@@ -65,11 +73,3 @@
         post_reboot_delay: 30
         test_command: uptime
       when: reboot_required_file.stat.exists
-
-  roles:
-    - ufw
-    - nginx
-    - php-fpm
-    - redis
-    - postgresql
-    - nextcloud

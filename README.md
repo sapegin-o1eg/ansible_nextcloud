@@ -42,7 +42,8 @@ Or at any directory use the command:
 To log in to the virtual machine via ssh use command (you must be at the same level as the Vagrantfile):
 
     $ vagrant ssh
-    
+
+
 Or at any directory use the command:
 
     $ vagrant ssh $(vagrant global-status | awk '/ansible_owncloud/ {print $1}')
