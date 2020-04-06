@@ -20,7 +20,7 @@
   postgresql_privs:
     db: nextcloud
     role: nextcloud
-    objs: ALL_IN_SCHEMA
+    type: database
     privs: ALL
 
 - name: Download tarball
@@ -71,19 +71,24 @@
   failed_when: "occ_result.stderr and 'Did you mean one of these' not in occ_result.stderr"
   changed_when: "'Nextcloud was successfully installed' in occ_result.stdout"
 
-- name: Configuring Nextcloud memory caching
-  blockinfile:
-    path: /var/www/nextcloud/config/config.php
-    marker: '/* {mark} ANSIBLE MANAGED BLOCK */'
-    insertbefore: '^\)\;$'
-    block: |
-      'memcache.local' => '\OC\Memcache\Redis',
-      'redis' =>
-      array (
-        'host' => 'localhost',
-        'port' => '6379',
-      ),
-      'memcache.locking' => '\OC\Memcache\Redis',
+# "occ config:system:set" always returns 0 exit code.
+# This awful workaround has been invented for the sake to make the task idempotent
+- name: Configuring Nextcloud memory caching via occ
+  become: true
+  become_user: www-data
+  shell:
+    chdir: /var/www/nextcloud
+    cmd: "{{ item.cmd }}:get {{ item.item }}&&echo _EXISTS||{{ item.cmd }}:set {{ item.item }} {{ item.value }}"
+  loop:
+              - { cmd: 'php occ config:system', item: 'memcache.locking', value: '--value=\\OC\\Memcache\\Redis' }
+              - { cmd: 'php occ config:system', item: 'redis port', value: '--value=6379' }
+              - { cmd: 'php occ config:system', item: 'redis host', value: '--value=localhost' }
+              - { cmd: 'php occ config:system', item: 'memcache.local', value: '--value=\\OC\\Memcache\\Redis' }
+  register: occ_config
+  changed_when: "'_EXISTS' not in occ_config.stdout and occ_config.rc == 0"
+
+- debug:
+    msg: "{{ occ_config|to_nice_json }}"
 
 - name: Add Nginx config for Nextcloud
   template:
