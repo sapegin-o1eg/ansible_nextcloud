@@ -1,0 +1,105 @@
+---
+- name: Create Nextcloud db
+  become: true
+  become_user: postgres
+  postgresql_db:
+    name: nextcloud
+    state: present
+
+- name: Create Nextcloud user
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    db: nextcloud
+    name: nextcloud
+    password: nextcloudpwd
+
+- name: Access for the new user
+  become: yes
+  become_user: postgres
+  postgresql_privs:
+    db: nextcloud
+    role: nextcloud
+    objs: ALL_IN_SCHEMA
+    privs: ALL
+
+- name: Download tarball
+  get_url:
+    url: https://download.nextcloud.com/server/releases/nextcloud-18.0.3.tar.bz2
+    dest: /tmp/nextcloud-18.0.3.tar.bz2
+    checksum: sha256:https://download.nextcloud.com/server/releases/nextcloud-18.0.3.tar.bz2.sha256
+  register: tarball
+
+- name: Extract the tarball
+  unarchive:
+    src: /tmp/nextcloud-18.0.3.tar.bz2
+    dest: /var/www/
+    copy: no
+  when: tarball.changed
+
+- name: Recursively change ownership of a directory
+  file:
+    path: /var/www/nextcloud
+    state: directory
+    recurse: yes
+    owner: www-data
+    group: www-data
+
+- name: Make custom data dir
+  file:
+    path: /opt/nextcloud/data
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: 0770
+
+- name: Nextcloud installation via occ
+  become: true
+  become_user: www-data
+  shell:
+    chdir: /var/www/nextcloud
+    cmd: >-
+      php occ maintenance:install
+      --database "pgsql"
+      --database-name "nextcloud"
+      --database-user "nextcloud"
+      --database-pass "nextcloudpwd"
+      --admin-user "admin"
+      --admin-pass "admin"
+      --data-dir "/opt/nextcloud/data"
+  register: occ_result
+  failed_when: "occ_result.stderr and 'Did you mean one of these' not in occ_result.stderr"
+  changed_when: "'Nextcloud was successfully installed' in occ_result.stdout"
+
+- name: Configuring Nextcloud memory caching
+  blockinfile:
+    path: /var/www/nextcloud/config/config.php
+    marker: '/* {mark} ANSIBLE MANAGED BLOCK */'
+    insertbefore: '^\)\;$'
+    block: |
+      'memcache.local' => '\OC\Memcache\Redis',
+      'redis' =>
+      array (
+        'host' => 'localhost',
+        'port' => '6379',
+      ),
+      'memcache.locking' => '\OC\Memcache\Redis',
+
+- name: Add Nginx config for Nextcloud
+  template:
+    src: templates/nextcloud.conf.j2
+    dest: /etc/nginx/sites-available/nc.local.conf
+  notify: restart nginx
+
+- name: Enable Nginx config for Nextcloud
+  file:
+    src: /etc/nginx/sites-available/nc.local.conf
+    dest: /etc/nginx/sites-enabled/nc.local.conf
+    state: link
+  notify: restart nginx
+
+- name: Disable default Nginx
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: restart nginx

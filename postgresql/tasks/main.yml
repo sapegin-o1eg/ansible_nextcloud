@@ -1,0 +1,26 @@
+---
+- name: Import the repository signing key
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+- name: Add postgresql repo
+  apt_repository:
+    repo: deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main
+    state: present
+
+- name: Install postgresql
+  apt:
+    name: postgresql-11
+    state: present
+
+- name: Make sure psycopg2 is installed
+  apt:
+    name: python3-psycopg2
+    state: present
+
+- name: Ensure postgresql is running and enabled
+  service:
+    name: postgresql
+    state: started
+    enabled: yes

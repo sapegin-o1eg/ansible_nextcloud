@@ -1,0 +1,15 @@
+---
+- name: Add repository for Nginx
+  apt_repository:
+    repo: ppa:ondrej/nginx
+    update_cache: yes
+
+- name: Install Nginx
+  apt:
+    name: nginx
+
+- name: Ensure Nginx is running and enabled
+  service:
+    name: nginx
+    state: started
+    enabled: yes

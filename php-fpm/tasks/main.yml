@@ -1,0 +1,15 @@
+---
+- name: Add repository for PHP {{ php_fpm_ver }}
+  apt_repository:
+    repo: ppa:ondrej/php
+    update_cache: yes
+
+- name: Install php-fpm{{ php_fpm_ver }}
+  apt:
+    pkg: '{{ php_fpm_modules }}'
+
+- name: Ensure php-fpm{{ php_fpm_ver }} is running and enabled
+  service:
+    name: php{{ php_fpm_ver }}-fpm
+    state: started
+    enabled: yes
