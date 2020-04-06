@@ -1,0 +1,33 @@
+---
+- name: Install
+  apt:
+    package: ufw
+    state: present
+
+- name: Configure chains policy
+  ufw:
+    direction: "{{ item.direction }}"
+    policy: "{{ item.policy }}"
+  loop: "{{ ufw_chains }}"
+  notify:
+    - restart ufw
+  when: "ufw_state == 'enabled'"
+
+- name: Configure rules
+  ufw:
+    rule: "{{ item.rule }}"
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+  loop: "{{ ufw_rules }}"
+  notify:
+    - restart ufw
+
+- name: Set logging to "{{ ufw_logging }}"
+  ufw:
+    logging: "{{ ufw_logging }}"
+  notify:
+    - restart ufw
+
+- name: Set state to "{{ ufw_state }}"
+  ufw:
+    state: "{{ ufw_state }}"

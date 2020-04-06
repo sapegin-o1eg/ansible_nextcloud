@@ -4,6 +4,39 @@
 
   vars:
     ansible_python_interpreter: /usr/bin/python3
+    ufw_state: 'enabled'
+    ufw_chains:
+      - { direction: 'incoming', policy: 'deny' }
+      - { direction: 'outgoing', policy: 'allow' }
+
+    ufw_rules:
+      - { rule: 'allow', port: '22', proto: 'tcp' }
+      - { rule: 'allow', port: '80', proto: 'tcp' }
+      - { rule: 'allow', port: '443', proto: 'tcp' }
+
+    php_fpm_ver: 7.3
+    php_fpm_modules:
+      - php{{ php_fpm_ver }}-fpm
+      - php{{ php_fpm_ver }}-common
+      - php{{ php_fpm_ver }}-curl
+      - php{{ php_fpm_ver }}-gd
+      - php{{ php_fpm_ver }}-xml
+      - php{{ php_fpm_ver }}-json
+      - php{{ php_fpm_ver }}-mbstring
+      - php{{ php_fpm_ver }}-zip
+      - php{{ php_fpm_ver }}-pgsql
+      - php{{ php_fpm_ver }}-bz2
+      - php{{ php_fpm_ver }}-intl
+      - php-redis
+      - php-igbinary
+
+    # set your passwords! do not use defaults!
+    nextcloud_db_type: pgsql
+    nextcloud_db: ncdb
+    nextcloud_db_user: nc
+    nextcloud_db_pass: xeemaZee0Gai8
+    nextcloud_admin_name: root
+    nextcloud_admin_pass: fei8Ichieghie
 
   pre_tasks:
     - name: Apt update
@@ -34,6 +67,7 @@
       when: reboot_required_file.stat.exists
 
   roles:
+    - ufw
     - nginx
     - php-fpm
     - redis

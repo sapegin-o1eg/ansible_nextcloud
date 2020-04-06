@@ -1,6 +1,6 @@
 galaxy_info:
   author: sapegin.o
-  description: php-fpm role
+  description: ufw role
   company: ...
 
   # If the issue tracker for your role is not on github, uncomment the

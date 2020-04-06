@@ -1,0 +1,11 @@
+---
+ufw_chains:
+  - { direction: 'incoming', policy: 'allow' }
+  - { direction: 'outgoing', policy: 'allow' }
+
+ufw_rules:
+  - { rule: 'allow', port: '22', proto: 'tcp' }
+
+ufw_logging: 'off'
+
+ufw_state: 'disabled'

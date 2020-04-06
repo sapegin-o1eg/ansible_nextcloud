@@ -3,70 +3,70 @@
   become: true
   become_user: postgres
   postgresql_db:
-    name: nextcloud
+    name: "{{ nextcloud_db }}"
     state: present
 
 - name: Create user
   become: yes
   become_user: postgres
   postgresql_user:
-    db: nextcloud
-    name: nextcloud
-    password: nextcloudpwd
+    db: "{{ nextcloud_db }}"
+    name: "{{ nextcloud_db_user }}"
+    password: "{{ nextcloud_db_pass }}"
 
 - name: Access for the new user
   become: yes
   become_user: postgres
   postgresql_privs:
-    db: nextcloud
-    role: nextcloud
+    db: "{{ nextcloud_db }}"
+    role: "{{ nextcloud_db_user }}"
     type: database
     privs: ALL
 
 - name: Download tarball
   get_url:
-    url: https://download.nextcloud.com/server/releases/nextcloud-18.0.3.tar.bz2
-    dest: /tmp/nextcloud-18.0.3.tar.bz2
-    checksum: sha256:https://download.nextcloud.com/server/releases/nextcloud-18.0.3.tar.bz2.sha256
+    url: https://download.nextcloud.com/server/releases/nextcloud-{{nc_ver}}.tar.bz2
+    dest: /tmp/nextcloud-{{nc_ver}}.tar.bz2
+    checksum: sha256:https://download.nextcloud.com/server/releases/nextcloud-{{nc_ver}}.tar.bz2.sha256
   register: tarball
 
 - name: Extract the tarball
   unarchive:
-    src: /tmp/nextcloud-18.0.3.tar.bz2
+    src: /tmp/nextcloud-{{nc_ver}}.tar.bz2
     dest: /var/www/
     copy: no
   when: tarball.changed
 
 - name: Recursively change ownership of a directory
   file:
-    path: /var/www/nextcloud
+    path: "{{ nextcloud_install_dir }}"
     state: directory
     recurse: yes
-    owner: www-data
-    group: www-data
+    owner: "{{ nextcloud_user }}"
+    group: "{{ nextcloud_group }}"
 
 - name: Make custom data dir
   file:
-    path: /opt/nextcloud/data
+    path: "{{ nextcloud_data_dir }}"
     state: directory
-    owner: www-data
-    group: www-data
+    owner: "{{ nextcloud_user }}"
+    group: "{{ nextcloud_group }}"
     mode: 0770
 
-- name: Installation via occ
+- name: Installation version {{ nc_ver }} via occ
   become: true
-  become_user: www-data
+  become_user: "{{ nextcloud_user }}"
   shell:
-    chdir: /var/www/nextcloud
+    chdir: "{{ nextcloud_install_dir }}"
     cmd: >-
       php occ maintenance:install
-      --database "pgsql"
-      --database-name "nextcloud"
-      --database-user "nextcloud"
-      --database-pass "nextcloudpwd"
-      --admin-user "admin"
-      --admin-pass "admin"
-      --data-dir "/opt/nextcloud/data"
+      --database "{{ nextcloud_db_type }}"
+      --database-name "{{ nextcloud_db }}"
+      --database-user "{{ nextcloud_db_user }}"
+      --database-pass "{{ nextcloud_db_pass }}"
+      --admin-user "{{ nextcloud_admin_name }}"
+      --admin-pass "{{ nextcloud_admin_pass }}"
+      --data-dir "{{ nextcloud_data_dir }}"
   register: occ_result
   failed_when: "occ_result.stderr and 'Did you mean one of these' not in occ_result.stderr"
   changed_when: "'Nextcloud was successfully installed' in occ_result.stdout"
@@ -75,9 +75,9 @@
 # This awful workaround has been invented for the sake to make the task idempotent
 - name: Configuring memory caching via occ
   become: true
-  become_user: www-data
+  become_user: "{{ nextcloud_user }}"
   shell:
-    chdir: /var/www/nextcloud
+    chdir: "{{ nextcloud_install_dir }}"
     cmd: "{{ item.cmd }}:get {{ item.item }}&&echo _EXISTS||{{ item.cmd }}:set {{ item.item }} {{ item.value }}"
   loop:
               - { cmd: 'php occ config:system', item: 'memcache.locking', value: '--value=\\OC\\Memcache\\Redis' }
@@ -90,13 +90,13 @@
 - name: Add Nginx config
   template:
     src: templates/nextcloud.conf.j2
-    dest: /etc/nginx/sites-available/nc.local.conf
+    dest: /etc/nginx/sites-available/{{nextcloud_server_name}}.conf
   notify: restart nginx
 
 - name: Enable Nginx config
   file:
-    src: /etc/nginx/sites-available/nc.local.conf
-    dest: /etc/nginx/sites-enabled/nc.local.conf
+    src: /etc/nginx/sites-available/{{nextcloud_server_name}}.conf
+    dest: /etc/nginx/sites-enabled/{{nextcloud_server_name}}.conf
     state: link
   notify: restart nginx
 
@@ -110,5 +110,5 @@
   cron:
     name: Nextcloud housekeeping operations
     minute: '5'
-    job: php -f /var/www/nextcloud/cron.php
-    user: www-data
+    job: php -f {{nextcloud_install_dir}}/cron.php
+    user: "{{ nextcloud_user }}"

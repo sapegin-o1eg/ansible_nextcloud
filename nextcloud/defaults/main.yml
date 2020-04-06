@@ -1,2 +1,15 @@
 ---
-# defaults file for nextcloud
+nc_ver: 18.0.3
+
+nextcloud_user: www-data
+nextcloud_group: www-data
+
+nextcloud_db_type: sqlite
+nextcloud_db: nextcloud
+nextcloud_db_user: nextcloud
+nextcloud_db_pass : nextcloudpwd
+nextcloud_admin_name: admin
+nextcloud_admin_pass: admin
+nextcloud_install_dir: /var/www/nextcloud
+nextcloud_data_dir: /opt/nextcloud/data
+nextcloud_server_name: nc.local
