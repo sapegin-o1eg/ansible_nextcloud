@@ -26,13 +26,13 @@
 - name: Download tarball
   get_url:
     url: https://download.nextcloud.com/server/releases/nextcloud-{{nc_ver}}.tar.bz2
-    dest: /tmp/nextcloud-{{nc_ver}}.tar.bz2
+    dest: /root/nextcloud-{{nc_ver}}.tar.bz2
     checksum: sha256:https://download.nextcloud.com/server/releases/nextcloud-{{nc_ver}}.tar.bz2.sha256
   register: tarball
 
 - name: Extract the tarball
   unarchive:
-    src: /tmp/nextcloud-{{nc_ver}}.tar.bz2
+    src: /root/nextcloud-{{nc_ver}}.tar.bz2
     dest: /var/www/
     copy: no
   when: tarball.changed
