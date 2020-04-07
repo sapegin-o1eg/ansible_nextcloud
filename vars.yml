@@ -1,0 +1,51 @@
+---
+ansible_python_interpreter: /usr/bin/python3
+
+# ufw role
+ufw_state: 'enabled'
+ufw_chains:
+  - { direction: 'incoming', policy: 'deny' }
+  - { direction: 'outgoing', policy: 'allow' }
+
+ufw_rules:
+  - { rule: 'allow', port: '22', proto: 'tcp' }
+  - { rule: 'allow', port: '80', proto: 'tcp' }
+  - { rule: 'allow', port: '443', proto: 'tcp' }
+
+#php-fpm role
+php_fpm_ver: 7.3
+php_fpm_modules:
+  - php{{ php_fpm_ver }}-fpm
+  - php{{ php_fpm_ver }}-common
+  - php{{ php_fpm_ver }}-curl
+  - php{{ php_fpm_ver }}-gd
+  - php{{ php_fpm_ver }}-xml
+  - php{{ php_fpm_ver }}-json
+  - php{{ php_fpm_ver }}-mbstring
+  - php{{ php_fpm_ver }}-zip
+  - php{{ php_fpm_ver }}-pgsql
+  - php{{ php_fpm_ver }}-bz2
+  - php{{ php_fpm_ver }}-intl
+  - php-redis
+  - php-igbinary
+
+# nextcloud role
+# set your passwords! do not use defaults!
+nextcloud_db_type: pgsql
+nextcloud_db: ncdb
+nextcloud_db_user: nc
+nextcloud_db_pass: xeemaZee0Gai8
+nextcloud_admin_name: root
+nextcloud_admin_pass: fei8Ichieghie
+
+# php.ini config
+# http://php.net/date.timezone
+php_fpm_ini_date:
+  - { env: fpm, option: date.timezone, value: Europe/Moscow }
+  - { env: cli, option: date.timezone, value: Europe/Moscow }
+
+php_fpm_ini_php:
+  - { env: fpm, option: upload_max_filesize, value: 128M }
+  - { env: fpm, option: post_max_size, value: 512M }
+  - { env: fpm, option: memory_limit, value: 512M }
+  - { env: fpm, option: max_execution_time, value: 600 }

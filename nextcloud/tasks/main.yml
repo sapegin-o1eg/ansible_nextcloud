@@ -71,8 +71,8 @@
   failed_when: "occ_result.stderr and 'Did you mean one of these' not in occ_result.stderr"
   changed_when: "'Nextcloud was successfully installed' in occ_result.stdout"
 
-# "occ config:system:set" always returns 0 exit code.
-# This awful workaround has been invented for the sake to make the task idempotent
+# "occ config:system:set" always returns 0 exit code and the same stdout, so
+# this awful workaround has been invented for the sake to make the task idempotent
 - name: Configuring memory caching via occ
   become: true
   become_user: "{{ nextcloud_user }}"

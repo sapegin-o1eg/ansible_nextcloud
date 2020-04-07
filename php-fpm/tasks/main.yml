@@ -13,3 +13,30 @@
     name: php{{ php_fpm_ver }}-fpm
     state: started
     enabled: yes
+
+- name: Configuring [Date] section in php.ini
+  ini_file:
+    dest: "/etc/php/{{ php_fpm_ver }}/{{ item.env }}/php.ini"
+    section: Date
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  loop: "{{ php_fpm_ini_date }}"
+  notify: restart php-fpm
+
+- name: Configuring [PHP] section in php.ini
+  ini_file:
+    dest: "/etc/php/{{ php_fpm_ver }}/{{ item.env }}/php.ini"
+    section: PHP
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  loop: "{{ php_fpm_ini_php }}"
+  notify: restart php-fpm
+
+- name: Configuring pool {{ php_fpm_pool }}
+  ini_file:
+    dest: "/etc/php/{{ php_fpm_ver }}/fpm/pool.d/{{ php_fpm_pool }}.conf"
+    section: "{{ php_fpm_pool }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  loop: "{{ php_fpm_pool_options }}"
+  notify: restart php-fpm

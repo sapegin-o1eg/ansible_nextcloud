@@ -3,7 +3,7 @@ TESTWORK
 
 Description
 ------------
-This repo contains Vagrantfile, ansible playbook (playbook,yml) and related roles for deploying virtual machine
+This repo contains Vagrantfile, ansible playbook and related roles for deploying virtual machine
 Ubuntu 18.04 LTS 64 with Nextcloud + Nginx + php-fpm + Postgresql + Redis
 
 Requirements

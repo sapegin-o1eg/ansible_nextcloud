@@ -1,42 +1,9 @@
 - hosts: all
   become: true
-  gather_facts: false
+  gather_facts: true
 
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-    ufw_state: 'enabled'
-    ufw_chains:
-      - { direction: 'incoming', policy: 'deny' }
-      - { direction: 'outgoing', policy: 'allow' }
-
-    ufw_rules:
-      - { rule: 'allow', port: '22', proto: 'tcp' }
-      - { rule: 'allow', port: '80', proto: 'tcp' }
-      - { rule: 'allow', port: '443', proto: 'tcp' }
-
-    php_fpm_ver: 7.3
-    php_fpm_modules:
-      - php{{ php_fpm_ver }}-fpm
-      - php{{ php_fpm_ver }}-common
-      - php{{ php_fpm_ver }}-curl
-      - php{{ php_fpm_ver }}-gd
-      - php{{ php_fpm_ver }}-xml
-      - php{{ php_fpm_ver }}-json
-      - php{{ php_fpm_ver }}-mbstring
-      - php{{ php_fpm_ver }}-zip
-      - php{{ php_fpm_ver }}-pgsql
-      - php{{ php_fpm_ver }}-bz2
-      - php{{ php_fpm_ver }}-intl
-      - php-redis
-      - php-igbinary
-
-    # set your passwords! do not use defaults!
-    nextcloud_db_type: pgsql
-    nextcloud_db: ncdb
-    nextcloud_db_user: nc
-    nextcloud_db_pass: xeemaZee0Gai8
-    nextcloud_admin_name: root
-    nextcloud_admin_pass: fei8Ichieghie
+  vars_files:
+    - vars.yml
 
   roles:
     - ufw
@@ -45,31 +12,3 @@
     - redis
     - postgresql
     - nextcloud
-
-  post_tasks:
-    - name: Apt update
-      apt:
-        update_cache: yes
-        force_apt_get: yes
-        cache_valid_time: 3600
-
-    - name: Upgrade all packages
-      apt:
-        upgrade: dist
-        force_apt_get: yes
-
-    - name: Check if a reboot is needed
-      stat:
-        path: /var/run/reboot-required
-        get_checksum: no
-      register: reboot_required_file
-
-    - name: Reboot the box if kernel updated
-      reboot:
-        msg: Reboot initiated by Ansible for kernel updates
-        connect_timeout: 5
-        reboot_timeout: 300
-        pre_reboot_delay: 0
-        post_reboot_delay: 30
-        test_command: uptime
-      when: reboot_required_file.stat.exists

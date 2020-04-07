@@ -4,3 +4,24 @@ php_fpm_ver: 7.4
 php_fpm_modules:
   - php{{ php_fpm_ver }}-fpm
   - php{{ php_fpm_ver }}-common
+
+# http://php.net/date.timezone
+php_fpm_ini_date:
+  - { env: fpm, option: date.timezone, value: UTC }
+  - { env: cli, option: date.timezone, value: UTC }
+
+php_fpm_ini_php:
+  - { env: fpm, option: upload_max_filesize, value: 2M }
+  - { env: fpm, option: post_max_size, value: 8M }
+  - { env: fpm, option: memory_limit, value: 128M }
+  - { env: fpm, option: max_execution_time, value: 30 }
+
+php_fpm_pool: 'www'
+
+php_fpm_pool_options:
+  - { option: 'env[HOSTNAME]', value: '$HOSTNAME' }
+  - { option: 'env[PATH]', value: "{{ ansible_env.PATH }}" }
+  - { option: 'env[TMP]', value: '/tmp' }
+  - { option: 'env[TMPDIR]', value: '/tmp' }
+  - { option: 'env[TEMP]', value: '/tmp' }
+
