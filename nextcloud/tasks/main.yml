@@ -25,14 +25,14 @@
 
 - name: Download tarball
   get_url:
-    url: https://download.nextcloud.com/server/releases/nextcloud-{{nc_ver}}.tar.bz2
-    dest: /root/nextcloud-{{nc_ver}}.tar.bz2
-    checksum: sha256:https://download.nextcloud.com/server/releases/nextcloud-{{nc_ver}}.tar.bz2.sha256
+    url: https://download.nextcloud.com/server/releases/nextcloud-{{ nc_ver }}.tar.bz2
+    dest: /root/nextcloud-{{ nc_ver }}.tar.bz2
+    checksum: sha256:https://download.nextcloud.com/server/releases/nextcloud-{{ nc_ver }}.tar.bz2.sha256
   register: tarball
 
 - name: Extract the tarball
   unarchive:
-    src: /root/nextcloud-{{nc_ver}}.tar.bz2
+    src: /root/nextcloud-{{ nc_ver }}.tar.bz2
     dest: /var/www/
     copy: no
   when: tarball.changed
@@ -90,13 +90,13 @@
 - name: Add Nginx config
   template:
     src: templates/nextcloud.conf.j2
-    dest: /etc/nginx/sites-available/{{nextcloud_server_name}}.conf
+    dest: /etc/nginx/sites-available/{{ nextcloud_server_name }}.conf
   notify: restart nginx
 
 - name: Enable Nginx config
   file:
-    src: /etc/nginx/sites-available/{{nextcloud_server_name}}.conf
-    dest: /etc/nginx/sites-enabled/{{nextcloud_server_name}}.conf
+    src: /etc/nginx/sites-available/{{ nextcloud_server_name }}.conf
+    dest: /etc/nginx/sites-enabled/{{ nextcloud_server_name }}.conf
     state: link
   notify: restart nginx
 
@@ -110,5 +110,5 @@
   cron:
     name: Nextcloud housekeeping operations
     minute: '5'
-    job: php -f {{nextcloud_install_dir}}/cron.php
+    job: php -f {{ nextcloud_install_dir }}/cron.php
     user: "{{ nextcloud_user }}"
